@@ -1,132 +1,78 @@
 import {
   DataPointSelectionModifier,
-  IDataPointSelectionModifierOptions
-} from "scichart/Charting/ChartModifiers/DataPointSelectionModifier";
+  ESelectionMode,
+  IDataPointSelectionModifierOptions,
+} from 'scichart/Charting/ChartModifiers/DataPointSelectionModifier';
+import { ModifierMouseArgs } from 'scichart/Charting/ChartModifiers/ModifierMouseArgs';
 import {
+  IRubberBandXyZoomModifierOptions,
   RubberBandXyZoomModifier,
-  IRubberBandXyZoomModifierOptions
-} from "scichart/Charting/ChartModifiers/RubberBandXyZoomModifier";
-import {
-  ZoomPanModifier,
-  IZoomPanModifierOptions
-} from "scichart/Charting/ChartModifiers/ZoomPanModifier";
+} from 'scichart/Charting/ChartModifiers/RubberBandXyZoomModifier';
+import { IYAxisDragModifierOptions, YAxisDragModifier } from 'scichart/Charting/ChartModifiers/YAxisDragModifier';
+import { IZoomPanModifierOptions, ZoomPanModifier } from 'scichart/Charting/ChartModifiers/ZoomPanModifier';
+import { Point } from 'scichart/Core/Point';
+import { EDragMode } from 'scichart/types/DragMode';
 
 export class TimeSeriesZoomPanModifier extends ZoomPanModifier {
   constructor(options?: IZoomPanModifierOptions) {
     super(options);
-    this.isEnabled = false;
   }
 
-  private handleKeyUpOrKeyDownEvent(e: KeyboardEvent) {
-    this.isEnabled = e.ctrlKey;
-    // console.log(
-    //   `ZPM | isEnabled: ${this.isEnabled} | ctrl: ${e.ctrlKey} | shift: ${e.shiftKey}`
-    // );
-  }
-
-  onAttach() {
-    super.onAttach();
-    this.parentSurface.domChartRoot.tabIndex =
-      this.parentSurface.domChartRoot.tabIndex || 0;
-    this.parentSurface.domChartRoot.addEventListener(
-      "keyup",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    this.parentSurface.domChartRoot.addEventListener(
-      "keydown",
-      this.handleKeyUpOrKeyDownEvent
-    );
-  }
-
-  onDetach() {
-    this.parentSurface.domChartRoot.removeEventListener(
-      "keyup",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    this.parentSurface.domChartRoot.removeEventListener(
-      "keydown",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    super.onDetach();
+  override modifierMouseDown(args: ModifierMouseArgs) {
+    if (!args.ctrlKey && !args.shiftKey && !args.altKey) {
+      super.modifierMouseDown(args);
+    }
   }
 }
 
 export class TimeSeriesRubberBandXyZoomModifier extends RubberBandXyZoomModifier {
   constructor(options?: IRubberBandXyZoomModifierOptions) {
     super(options);
-    this.isEnabled = false;
   }
 
-  private handleKeyUpOrKeyDownEvent(e: KeyboardEvent) {
-    this.isEnabled = e.shiftKey;
-    console.log(
-      `RBM | isEnabled: ${this.isEnabled} | ctrl: ${e.ctrlKey} | shift: ${e.shiftKey}`
-    );
-  }
-
-  onAttach() {
-    super.onAttach();
-    this.parentSurface.domChartRoot.tabIndex =
-      this.parentSurface.domChartRoot.tabIndex || 0;
-    this.parentSurface.domChartRoot.addEventListener(
-      "keyup",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    this.parentSurface.domChartRoot.addEventListener(
-      "keydown",
-      this.handleKeyUpOrKeyDownEvent
-    );
-  }
-
-  onDetach() {
-    this.parentSurface.domChartRoot.removeEventListener(
-      "keyup",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    this.parentSurface.domChartRoot.removeEventListener(
-      "keydown",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    super.onDetach();
+  override modifierMouseDown(args: ModifierMouseArgs) {
+    if (args.shiftKey) {
+      super.modifierMouseDown(args);
+    }
   }
 }
 
 export class TimeSeriesDataPointSelectionModifier extends DataPointSelectionModifier {
   constructor(options?: IDataPointSelectionModifierOptions) {
     super(options);
-    this.isEnabled = true;
   }
 
-  private handleKeyUpOrKeyDownEvent(e: KeyboardEvent) {
-    this.isEnabled = !e.ctrlKey && !e.shiftKey;
-    console.log(
-      `DPM | isEnabled: ${this.isEnabled} | ctrl: ${e.ctrlKey} | shift: ${e.shiftKey}`
-    );
+  override modifierMouseDown(args: ModifierMouseArgs) {
+    if (args.ctrlKey) {
+      super.modifierMouseDown(args);
+    }
   }
 
-  onAttach() {
-    super.onAttach();
-    this.parentSurface.domChartRoot.tabIndex =
-      this.parentSurface.domChartRoot.tabIndex || 0;
-    this.parentSurface.domChartRoot.addEventListener(
-      "keyup",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    this.parentSurface.domChartRoot.addEventListener(
-      "keydown",
-      this.handleKeyUpOrKeyDownEvent
-    );
+  protected selectSinglePoint(point: Point) {
+    super.selectSinglePoint(point, ESelectionMode.Replace);
+  }
+}
+
+export class TimeSeriesYAxisDragModifier extends YAxisDragModifier {
+  constructor(options?: IYAxisDragModifierOptions) {
+    super(options);
   }
 
-  onDetach() {
-    this.parentSurface.domChartRoot.removeEventListener(
-      "keyup",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    this.parentSurface.domChartRoot.removeEventListener(
-      "keydown",
-      this.handleKeyUpOrKeyDownEvent
-    );
-    super.onDetach();
+  override modifierMouseWheel(args: ModifierMouseArgs) {
+    if (args.ctrlKey) {
+      this.dragMode = EDragMode.Scaling;
+    } else {
+      this.dragMode = EDragMode.Panning;
+    }
+    super.modifierMouseWheel(args);
+  }
+
+  override modifierMouseDown(args: ModifierMouseArgs) {
+    if (args.ctrlKey) {
+      this.dragMode = EDragMode.Scaling;
+    } else {
+      this.dragMode = EDragMode.Panning;
+    }
+    super.modifierMouseDown(args);
   }
 }
